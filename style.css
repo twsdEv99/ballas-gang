@@ -1,0 +1,62 @@
+/* 3D Navigation Links */
+.navbar a {
+  display: inline-block;
+  padding: 10px 28px;
+  background: purple;
+  border-radius: 40px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  font-size: 16px;
+  color: black;
+  letter-spacing: 1px;
+  text-decoration: none;
+  font-weight: 600;
+  transform: perspective(600px) rotateY(0deg);
+  transition: transform 0.3s ease;
+}
+
+.navbar a:hover {
+  transform: perspective(600px) rotateY(15deg);
+}
+
+/* Interactive Image Card */
+.card {
+  width: 300px;
+  height: 200px;
+  perspective: 1000px;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+}
+
+.card:hover .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+/* Animated Background */
+@keyframes backgroundMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 100% 0; }
+}
+
+body {
+  background: linear-gradient(270deg, #420234, #AF40FF);
+  background-size: 400% 400%;
+  animation: backgroundMove 10s linear infinite;
+}

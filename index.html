@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESBG Ballas Gang</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        :root {
+            --purple-dark: #2a0a33;
+            --purple-medium: #6a1b9a;
+            --purple-light: #9c27b0;
+            --purple-neon: #e100ff;
+            --black: #111;
+            --white: #f1f1f1;
+            --font-main: 'Arial Black', 'Impact', sans-serif;
+        }
+
+        /* Crosshair Styles */
+        .crosshair {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+        
+        .crosshair::before,
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            background-color: var(--purple-neon);
+            box-shadow: 0 0 5px var(--purple-neon), 
+                        0 0 10px var(--purple-neon);
+        }
+        
+        .crosshair::before {
+            width: 20px;
+            height: 3px;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .crosshair::after {
+            width: 3px;
+            height: 20px;
+            left: 50%;
+            top: 5px;
+            transform: translateX(-50%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+        }
+
+        body {
+            background-color: var(--black);
+            color: var(--white);
+            overflow-x: hidden;
+            font-family: var(--font-main);
+        }
+
+        /* Insane 3D Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 5%;
+            background: rgba(10, 0, 15, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            border-bottom: 2px solid var(--purple-neon);
+            box-shadow: 0 0 30px rgba(225, 0, 255, 0.3);
+        }
+
+        .logo {
+            position: relative;
+            font-size: 2.2rem;
+            color: transparent;
+            text-decoration: none;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            -webkit-text-stroke: 1px var(--purple-neon);
+            text-shadow: 0 0 15px var(--purple-neon),
+                         0 0 30px var(--purple-neon),
+                         0 0 60px var(--purple-neon);
+            animation: logoGlow 2s infinite alternate;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .logo::before {
+            content: 'Ballas';
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255,255,255,0.1);
+            z-index: -1;
+            transform: translateZ(-20px);
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: var(--purple-neon);
+            transform: translateY(-50%) scaleX(0);
+            transform-origin: right;
+            transition: transform 0.5s ease;
+            filter: blur(5px);
+            z-index: -1;
+        }
+
+        .logo:hover::after {
+            transform: translateY(-50%) scaleX(1);
+            transform-origin: left;
+        }
+
+        .navbar {
+            display: flex;
+            gap: 15px;
+            perspective: 1000px;
+        }
+
+        .navbar a {
+            position: relative;
+            font-size: 1.1rem;
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 700;
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transform-style: preserve-3d;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0;
+            animation: slideTop 0.5s ease forwards;
+            animation-delay: calc(0.2s * var(--i));
+            background: rgba(106, 27, 154, 0.2);
+            border: 2px solid var(--purple-medium);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3),
+                        inset 0 1px 1px rgba(255,255,255,0.1);
+        }
+
+        .navbar a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, 
+                      transparent, 
+                      var(--purple-neon), 
+                      transparent);
+            transform: translateZ(-10px);
+            opacity: 0;
+            transition: opacity 0.5s;
+            border-radius: 50px;
+        }
+
+        .navbar a:hover,
+        .navbar a.active {
+            color: var(--black);
+            background: var(--purple-neon);
+            box-shadow: 0 0 20px var(--purple-neon),
+                        0 0 40px var(--purple-neon),
+                        0 0 80px var(--purple-neon),
+                        0 0 120px var(--purple-neon);
+            transform: translateY(-5px) rotateX(20deg);
+            text-shadow: 0 0 5px var(--black);
+        }
+
+        .navbar a:hover::before,
+        .navbar a.active::before {
+            opacity: 0.5;
+        }
+
+        .navbar a span {
+            position: relative;
+            z-index: 1;
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+
+        .navbar a:hover span {
+            transform: scale(1.1);
+        }
+
+        /* Enhanced Home Section */
+        .home {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 100px 10% 70px;
+            background: url('images/ballas.png') no-repeat center center/cover;
+            background-attachment: fixed;
+            overflow: hidden;
+        }
+
+        .home::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(42,10,51,0.7) 0%, rgba(0,0,0,0.9) 70%);
+            z-index: 0;
+        }
+
+        .home-content {
+            max-width: 600px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .home-content h3 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            opacity: 0;
+            animation: slideBottom 1s ease forwards;
+            animation-delay: 0.5s;
+            text-shadow: 0 0 10px var(--purple-neon);
+        }
+
+        .home-content h1 {
+            font-size: 72px;
+            font-weight: 900;
+            margin: -3px 0;
+            opacity: 0;
+            animation: slideRight 1s ease forwards;
+            animation-delay: 0.7s;
+            background: linear-gradient(45deg, var(--white), var(--purple-light), var(--purple-neon));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(225, 0, 255, 0.5);
+            position: relative;
+            display: inline-block;
+        }
+
+        .home-content h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, transparent, var(--purple-neon), transparent);
+            border-radius: 50%;
+            filter: blur(5px);
+            animation: titleUnderline 3s infinite alternate;
+        }
+
+        .home-content h3 span {
+            color: var(--purple-light);
+            text-shadow: 0 0 15px var(--purple-neon);
+            position: relative;
+        }
+
+        .home-content h3 span::before {
+            content: 'only cheaters';
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: transparent;
+            -webkit-text-stroke: 1px var(--purple-neon);
+            z-index: -1;
+            animation: textGlitch 3s infinite alternate;
+        }
+
+        .home-img {
+            position: relative;
+            z-index: 1;
+            width: 400px;
+            height: 400px;
+            opacity: 0;
+            animation: zoomIn 1s ease forwards, floatImage 4s ease-in-out infinite;
+            animation-delay: 1s, 2s;
+            filter: drop-shadow(0 0 30px var(--purple-neon));
+        }
+
+        .home-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        .social-media {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .social-media a {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 60px;
+            height: 60px;
+            background: rgba(106, 27, 154, 0.2);
+            border: 2px solid var(--purple-light);
+            border-radius: 50%;
+            font-size: 28px;
+            color: var(--purple-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: slideLeft 1s ease forwards;
+            animation-delay: calc(0.2s * var(--i));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .social-media a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(225, 0, 255, 0.4), transparent);
+            transition: 0.5s;
+        }
+
+        .social-media a:hover::before {
+            left: 100%;
+        }
+
+        .social-media a:hover {
+            background: var(--purple-light);
+            color: var(--black);
+            box-shadow: 0 0 20px var(--purple-neon);
+            transform: translateY(-5px) scale(1.1);
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 35px;
+            background: linear-gradient(45deg, var(--purple-dark), var(--purple-light));
+            border-radius: 30px;
+            font-size: 18px;
+            color: var(--white);
+            letter-spacing: 1px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 0 20px var(--purple-light);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: slideTop 1s ease forwards;
+            animation-delay: 1.5s;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px var(--purple-neon);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--purple-light);
+            animation-delay: 1.8s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(156, 39, 176, 0.2);
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: calc(0.2s * var(--i));
+        }
+
+        .stat-number {
+            font-size: 42px;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--purple-light), var(--purple-neon));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(225, 0, 255, 0.5);
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: var(--white);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Floating Gang Tags */
+        .gang-tag {
+            position: absolute;
+            color: var(--purple-neon);
+            font-size: 24px;
+            font-weight: bold;
+            opacity: 0.3;
+            z-index: 0;
+            animation: floatAround 15s linear infinite;
+        }
+
+        /* YouTube Section */
+        .youtube {
+            width: 100%;
+            min-height: 100vh;
+            padding: 100px 10%;
+            background: url('images/lol.png') no-repeat center center/cover;
+            background-attachment: fixed;
+            position: relative;
+        }
+
+        .youtube::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .youtube-content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            text-align: center;
+        }
+
+        .youtube-content h2 {
+            font-size: 48px;
+            margin-bottom: 50px;
+            background: linear-gradient(45deg, var(--white), var(--purple-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .youtube-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .youtube-card {
+            background: rgba(66, 2, 52, 0.5);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--purple-light);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: calc(0.2s * var(--i));
+        }
+
+        .youtube-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(175, 64, 255, 0.3);
+        }
+
+        .youtube-card h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: var(--purple-light);
+        }
+
+        .youtube-card a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: var(--purple-light);
+            color: var(--black);
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .youtube-card a:hover {
+            background: var(--white);
+            box-shadow: 0 0 15px var(--purple-light);
+        }
+
+        /* Music Section */
+        .music {
+            width: 100%;
+            min-height: 100vh;
+            padding: 100px 10%;
+            background: url('images/music.png') no-repeat center center/cover;
+            background-attachment: fixed;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .music::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .music-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+        }
+
+        .music-content h2 {
+            font-size: 48px;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, var(--white), var(--purple-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .music-content p {
+            font-size: 18px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .music-btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, var(--purple-dark), var(--purple-light));
+            border-radius: 30px;
+            font-size: 18px;
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 0 15px var(--purple-light);
+            transition: all 0.3s ease;
+        }
+
+        .music-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px var(--purple-light);
+        }
+
+        /* About Section */
+        .about {
+            width: 100%;
+            min-height: 100vh;
+            padding: 100px 10%;
+            background: linear-gradient(to bottom, var(--purple-dark), var(--black));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .about-content {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+            max-width: 1200px;
+        }
+
+        .about-img {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .about-img img {
+            max-width: 400px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(175, 64, 255, 0.5);
+            animation: floatImage 4s ease-in-out infinite;
+        }
+
+        .about-text {
+            flex: 1;
+        }
+
+        .about-text h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, var(--white), var(--purple-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .about-text p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 30px 10%;
+            background: var(--black);
+            text-align: center;
+            border-top: 1px solid var(--purple-light);
+        }
+
+        .footer p {
+            font-size: 16px;
+            color: var(--white);
+        }
+
+        /* New floating elements */
+        .floating-element {
+            position: absolute;
+            background: rgba(156, 39, 176, 0.1);
+            border: 1px solid var(--purple-light);
+            border-radius: 50%;
+            filter: blur(1px);
+            z-index: 0;
+            animation: floatElement 15s infinite linear;
+        }
+
+        /* Animations */
+        @keyframes slideRight {
+            0% {
+                transform: translateX(-100px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideLeft {
+            0% {
+                transform: translateX(100px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideTop {
+            0% {
+                transform: translateY(100px) rotateX(-90deg);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0) rotateX(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideBottom {
+            0% {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes zoomIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes floatImage {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-24px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes logoGlow {
+            0% {
+                text-shadow: 0 0 15px var(--purple-neon),
+                             0 0 30px var(--purple-neon),
+                             0 0 60px var(--purple-neon);
+            }
+            100% {
+                text-shadow: 0 0 20px var(--purple-neon),
+                             0 0 40px var(--purple-neon),
+                             0 0 80px var(--purple-neon),
+                             0 0 120px var(--purple-neon);
+            }
+        }
+
+        @keyframes floatAround {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(50px, 50px) rotate(90deg);
+            }
+            50% {
+                transform: translate(100px, 0) rotate(180deg);
+            }
+            75% {
+                transform: translate(50px, -50px) rotate(270deg);
+            }
+            100% {
+                transform: translate(0, 0) rotate(360deg);
+            }
+        }
+
+        @keyframes titleUnderline {
+            0% {
+                transform: scaleX(0.8);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scaleX(1.2);
+                opacity: 1;
+            }
+        }
+
+        @keyframes textGlitch {
+            0%, 100% {
+                transform: translate(0);
+            }
+            20% {
+                transform: translate(-3px, 3px);
+            }
+            40% {
+                transform: translate(-3px, -3px);
+            }
+            60% {
+                transform: translate(3px, 3px);
+            }
+            80% {
+                transform: translate(3px, -3px);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                filter: drop-shadow(0 0 20px var(--purple-neon));
+                transform: scale(1);
+            }
+            50% {
+                filter: drop-shadow(0 0 40px var(--purple-neon));
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes floatElement {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(100px, 50px) rotate(90deg);
+            }
+            50% {
+                transform: translate(200px, 0) rotate(180deg);
+            }
+            75% {
+                transform: translate(100px, -50px) rotate(270deg);
+            }
+            100% {
+                transform: translate(0, 0) rotate(360deg);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .home,
+            .youtube,
+            .music,
+            .about {
+                padding: 100px 5%;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .home-content h1 {
+                font-size: 56px;
+            }
+            
+            .about-content {
+                flex-direction: column;
+            }
+            
+            .about-img {
+                margin-bottom: 30px;
+            }
+            
+            .btn {
+                padding: 12px 25px;
+                font-size: 16px;
+            }
+            
+            .social-media a {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px 5%;
+            }
+            
+            .home {
+                flex-direction: column;
+                text-align: center;
+                padding-top: 150px;
+                height: auto;
+            }
+            
+            .home-content {
+                margin-bottom: 50px;
+            }
+            
+            .home-img {
+                width: 300px;
+                height: 300px;
+            }
+            
+            .navbar {
+                display: none;
+            }
+            
+            .youtube-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .stats {
+                gap: 15px;
+                justify-content: center;
+            }
+            
+            .stat-item {
+                flex: 1 1 100px;
+            }
+            
+            .stat-number {
+                font-size: 32px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .home-content h1 {
+                font-size: 36px;
+            }
+            
+            .home-content h3 {
+                font-size: 24px;
+            }
+            
+            .youtube-content h2,
+            .music-content h2,
+            .about-text h2 {
+                font-size: 36px;
+            }
+            
+            .stat-number {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom Crosshair -->
+    <div class="crosshair" id="crosshair"></div>
+
+    <!-- Insane 3D Header -->
+    <header class="header">
+        <a href="#" class="logo">Ballas</a>
+        <nav class="navbar">
+            <a href="#home" style="--i:1" class="active"><span>Home</span></a>
+            <a href="#youtube" style="--i:2"><span>YouTube</span></a>
+            <a href="#music" style="--i:3"><span>Music</span></a>
+            <a href="#about" style="--i:4"><span>About</span></a>
+        </nav>
+    </header>
+
+    <!-- Enhanced Home Section -->
+    <section class="home" id="home">
+        <!-- Floating elements -->
+        <div class="floating-element" style="width: 300px; height: 300px; top: -150px; right: -150px; animation-delay: 0s;"></div>
+        <div class="floating-element" style="width: 200px; height: 200px; bottom: -100px; left: -100px; animation-delay: 3s;"></div>
+        <div class="floating-element" style="width: 150px; height: 150px; top: 50%; left: 10%; animation-delay: 6s;"></div>
+        
+        <!-- Gang tags floating around -->
+        <div class="gang-tag" style="top: 20%; left: 10%; animation-delay: 0s;">ESBG</div>
+        <div class="gang-tag" style="top: 70%; left: 80%; animation-delay: 2s;">BALLAS</div>
+        <div class="gang-tag" style="top: 30%; left: 70%; animation-delay: 4s;">GANG</div>
+        <div class="gang-tag" style="top: 80%; left: 20%; animation-delay: 6s;">CHEATERS</div>
+
+        <div class="home-content">
+            <h3>Welcome to the</h3>
+            <h1>ESBG BALLAS</h1>
+            <h3>Where there are <span>only cheaters</span></h3>
+            
+            <div class="social-media">
+                <a href="https://discord.gg/pqaSNtJz" style="--i:5"><i class='bx bxl-discord'></i></a>
+                <a href="https://www.youtube.com/channel/UCJ66cBFLdI3PDp1LnI19icw" style="--i:6"><i class='bx bxl-youtube'></i></a>
+                <a href="#" style="--i:7"><i class='bx bxl-twitter'></i></a>
+                <a href="#" style="--i:8"><i class='bx bxl-instagram'></i></a>
+                <a href="#" style="--i:9"><i class='bx bxl-tiktok'></i></a>
+            </div>
+            
+            <div class="btn-container">
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSe1wFrwKfOaeF24q3NAARIT5l2hOCeEzZDCkQLcTc6GQWtZxg/viewform" class="btn">Join The Gang</a>
+                <a href="#about" class="btn btn-secondary">Learn More</a>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item" style="--i:10">
+                    <div class="stat-number" id="memberCount">500+</div>
+                    <div class="stat-label">Members</div>
+                </div>
+                <div class="stat-item" style="--i:11">
+                    <div class="stat-number" id="videoCount">1000+</div>
+                    <div class="stat-label">Videos</div>
+                </div>
+                <div class="stat-item" style="--i:12">
+                    <div class="stat-number" id="subscriberCount">50K+</div>
+                    <div class="stat-label">Subscribers</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="home-img">
+            <img src="images/b.png" alt="Ballas Gang">
+        </div>
+    </section>
+
+    <!-- YouTube Section -->
+    <section class="youtube" id="youtube">
+        <div class="youtube-content">
+            <h2>Our YouTube Channels</h2>
+            <div class="youtube-grid">
+                <!-- Channel 1 -->
+                <div class="youtube-card" style="--i:1">
+                    <h3>sdx no fail!</h3>
+                    <a href="https://www.youtube.com/channel/UCh6yovMJjXBQvZDij0Xbbow">
+                        <i class='bx bxl-youtube'></i> Subscribe
+                    </a>
+                </div>
+                
+                <!-- Channel 2 -->
+                <div class="youtube-card" style="--i:2">
+                    <h3>!Flavii</h3>
+                    <a href="https://www.youtube.com/channel/UC4HY1ag5j1UPQ74_JVi8NcQ">
+                        <i class='bx bxl-youtube'></i> Subscribe
+                    </a>
+                </div>
+                
+                <!-- Channel 3 -->
+                <div class="youtube-card" style="--i:3">
+                    <h3>Numbour</h3>
+                    <a href="https://www.youtube.com/channel/UC3OfH7Fv7_mrmz6k3xP6fCQ">
+                        <i class='bx bxl-youtube'></i> Subscribe
+                    </a>
+                </div>
+                
+                <!-- Channel 4 -->
+                <div class="youtube-card" style="--i:4">
+                    <h3>P Money!</h3>
+                    <a href="https://www.youtube.com/@PMoney208">
+                        <i class='bx bxl-youtube'></i> Subscribe
+                    </a>
+                </div>
+                
+                <!-- Channel 5 -->
+                <div class="youtube-card" style="--i:5">
+                    <h3>doll</h3>
+                    <a href="https://youtube.com/@daliii-hd9zd?si=mhPbjt46VIJcapGS">
+                        <i class='bx bxl-youtube'></i> Subscribe
+                    </a>
+                </div>
+                
+                <!-- Channel 6 -->
+                <div class="youtube-card" style="--i:6">
+                    <h3>Danielo</h3>
+                    <a href="https://www.youtube.com/@danielobraga.-4">
+                        <i class='bx bxl-youtube'></i> Subscribe
+                    </a>
+                </div>
+                
+                <!-- Channel 7 -->
+                <div class="youtube-card" style="--i:7">
+                    <h3>Tss Trooper</h3>
+                    <a href="https://www.youtube.com/channel/UCdM-4T63LagRrEo5fbaCeew">
+                        <i class='bx bxl-youtube'></i> Subscribe
+                    </a>
+                </div>
+                
+                <!-- Channel 8 -->
+                <div class="youtube-card" style="--i:8">
+                    <h3>Parara!</h3>
+                    <a href="https://www.youtube.com/channel/UCXdtTFXMKrrq3uInUzEZdpA">
+                        <i class='bx bxl-youtube'></i> Subscribe
+                    </a>
+                </div>
+                
+                <!-- Channel 9 -->
+                <div class="youtube-card" style="--i:9">
+                    <h3>BrinGaa</h3>
+                    <a href="https://www.youtube.com/@Desconhecido-XII">
+                        <i class='bx bxl-youtube'></i> Subscribe
+                    </a>
+                </div>
+                
+                <!-- Channel 10 -->
+                <div class="youtube-card" style="--i:10">
+                    <h3>!Pitcho</h3>
+                    <a href="https://www.youtube.com/@Pitcho_NoCap/videos">
+                        <i class='bx bxl-youtube'></i> Subscribe
+                    </a>	
+                </div>
+				
+				<!-- Channel 10 -->
+                <div class="youtube-card" style="--i:10">
+                    <h3>!N10</h3>
+                    <a href="https://www.youtube.com/@NUWANDA-10">
+                        <i class='bx bxl-youtube'></i> Subscribe
+                    </a>	
+                </div>
+				
+				<!-- Channel 10 -->
+                <div class="youtube-card" style="--i:10">
+                    <h3>!Gafsi</h3>
+                    <a href="https://www.youtube.com/@Fccc55Hf">
+                        <i class='bx bxl-youtube'></i> Subscribe
+                    </a>	
+                </div>
+        </div>
+    </section>
+
+    <!-- Music Section -->
+    <section class="music" id="music">
+        <div class="music-content">
+            <h2>Our Music</h2>
+            <p>Check out our latest tracks and stay updated with the Ballas sound. We bring the heat with our unique style and underground beats that represent the gang lifestyle.</p>
+            <a href="https://www.youtube.com/watch?v=ZAW_mLEzGCY" class="music-btn">Listen Now</a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="about-content">
+            <div class="about-img">
+                <img src="images/ballas_logo.png" alt="Ballas Logo">
+            </div>
+            <div class="about-text">
+                <h2>ESBG</h2>
+                <p>The Ballas are an African-American street gang based in Los Santos. Most of their territory can be found in the poorer run-down neighborhoods to the far east of the city. They are involved in gangbanging, gang warfare, street violence, prostitution, gang-related homicide, murder, drug trafficking manufacturing (especially the crack cocaine trade), gun-running/arms trafficking, vandalism, and degeneracy. They are easily identifiable by wearing purple clothing as their gang color.</p>
+                <p>ESBG Ballas represents the digital evolution of this notorious gang, bringing our presence to the online world through gaming, music, and content creation. We dominate the streets both virtually and in reality.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 ESBG Ballas Gang. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        // Crosshair functionality
+        const crosshair = document.getElementById('crosshair');
+        
+        // Show crosshair when mouse moves
+        document.addEventListener('mousemove', (e) => {
+            crosshair.style.display = 'block';
+            crosshair.style.left = `${e.clientX}px`;
+            crosshair.style.top = `${e.clientY}px`;
+            
+            // Your existing mouse move parallax effect
+            const logo = document.querySelector('.logo');
+            const navLinks = document.querySelectorAll('.navbar a');
+            
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            logo.style.transform = `rotateY(${(x - 0.5) * 10}deg) rotateX(${(y - 0.5) * -10}deg)`;
+            
+            navLinks.forEach(link => {
+                const depth = link.getAttribute('style').split('--i:')[1].split(')')[0];
+                link.style.transform = `translateY(${(y - 0.5) * depth * -2}px) rotateX(${(y - 0.5) * depth * 2}deg) rotateY(${(x - 0.5) * depth * 2}deg)`;
+            });
+        });
+
+        // Crosshair click animation
+        document.addEventListener('click', () => {
+            crosshair.style.transform = 'translate(-50%, -50%) scale(1.5)';
+            setTimeout(() => {
+                crosshair.style.transform = 'translate(-50%, -50%) scale(1)';
+            }, 100);
+        });
+
+        // Hide crosshair when mouse leaves window
+        document.addEventListener('mouseout', (e) => {
+            if (!e.relatedTarget && e.target.nodeName.toLowerCase() !== 'html') {
+                crosshair.style.display = 'none';
+            }
+        });
+
+        // Enhanced JavaScript for the home section
+        
+        // Animated counter for stats
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                obj.innerHTML = value + "+";
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Start counters when home section is in view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateValue("memberCount", 0, 500, 2000);
+                    animateValue("videoCount", 0, 1000, 2000);
+                    animateValue("subscriberCount", 0, 50, 2000);
+                    
+                    // Create more floating gang tags dynamically
+                    for (let i = 0; i < 8; i++) {
+                        const tag = document.createElement('div');
+                        tag.className = 'gang-tag';
+                        tag.textContent = ['ESBG', 'BALLAS', 'GANG', 'CHEATERS', 'PURPLE', 'RULERS', 'DOMINATE', 'WIN'][i];
+                        tag.style.top = `${Math.random() * 80 + 10}%`;
+                        tag.style.left = `${Math.random() * 80 + 10}%`;
+                        tag.style.animationDelay = `${Math.random() * 8}s`;
+                        tag.style.opacity = `${Math.random() * 0.3 + 0.1}`;
+                        tag.style.fontSize = `${Math.random() * 10 + 16}px`;
+                        tag.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                        document.querySelector('.home').appendChild(tag);
+                    }
+
+                    // Create more floating elements
+                    for (let i = 0; i < 5; i++) {
+                        const element = document.createElement('div');
+                        element.className = 'floating-element';
+                        const size = Math.random() * 200 + 50;
+                        element.style.width = `${size}px`;
+                        element.style.height = `${size}px`;
+                        element.style.top = `${Math.random() * 100 - 20}%`;
+                        element.style.left = `${Math.random() * 100 - 20}%`;
+                        element.style.animationDelay = `${Math.random() * 10}s`;
+                        element.style.animationDuration = `${Math.random() * 15 + 10}s`;
+                        document.querySelector('.home').appendChild(element);
+                    }
+                }
+            });
+        }, {threshold: 0.5});
+
+        observer.observe(document.querySelector('.home'));
+
+        // Your existing JavaScript remains the same
+        document.querySelectorAll('.navbar a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                for (let i = 0; i < 10; i++) {
+                    const particle = document.createElement('div');
+                    particle.style.position = 'absolute';
+                    particle.style.width = '5px';
+                    particle.style.height = '5px';
+                    particle.style.backgroundColor = 'var(--purple-neon)';
+                    particle.style.borderRadius = '50%';
+                    particle.style.pointerEvents = 'none';
+                    particle.style.left = `${e.clientX}px`;
+                    particle.style.top = `${e.clientY}px`;
+                    particle.style.boxShadow = '0 0 10px var(--purple-neon)';
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const velocity = 5 + Math.random() * 5;
+                    const x = Math.cos(angle) * velocity;
+                    const y = Math.sin(angle) * velocity;
+                    
+                    document.body.appendChild(particle);
+                    
+                    let posX = e.clientX;
+                    let posY = e.clientY;
+                    let opacity = 1;
+                    
+                    const animate = () => {
+                        posX += x;
+                        posY += y;
+                        opacity -= 0.03;
+                        
+                        particle.style.left = `${posX}px`;
+                        particle.style.top = `${posY}px`;
+                        particle.style.opacity = opacity;
+                        
+                        if (opacity > 0) {
+                            requestAnimationFrame(animate);
+                        } else {
+                            particle.remove();
+                        }
+                    };
+                    
+                    animate();
+                }
+                
+                setTimeout(() => {
+                    window.location.href = this.getAttribute('href');
+                }, 300);
+            });
+        });
+
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.navbar a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                
+                if (pageYOffset >= (sectionTop - 300)) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
